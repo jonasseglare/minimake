@@ -1,4 +1,5 @@
 var assert = require('assert');
+var snytbagge = require('../snytbagge/index.js');
 var fs = require('fs');
 // https://www.npmjs.com/package/object-hash
 
@@ -35,22 +36,44 @@ function getSingleElement(x) {
   return x;
 }
 
+function makeAgeGetterFromDstFiles(dstFiles) {
+  return function(cb) {
+    //cb(null, 'mjaoe'); return;
+
+    var args = new snytbagge.ArgArray(dstFiles.length);
+    for (var i = 0; i < dstFiles.length; i++) {
+      var cb2 = args.makeSetter(i);
+      fs.stat(dstFiles[i], function(err, data) {
+        if (err) {
+          cb2(err);
+        } else {
+          cb2(null, data.mtime);
+        }
+      });
+    }
+    args.get(function(err, ages) {
+      if (err) {
+        cb(err);
+      } else {
+        var minAge = ages[0];
+        for (var i = 1; i < ages.length; i++) {
+          var age = ages[i];
+          if (age < minAge) {
+            minAge = age;
+          }
+        }
+        cb(null, minAge);
+      }
+    });
+  };
+}
+
+
 function makeAgeGetter(spec) {
   if (isFunction(spec.getAge)) {
     return spec.getAge;
-  } else if (isArray(spec.dstFiles)) {
-
-    assert(spec.dstFiles.length > 0); // TODO: Take the age of oldest file
-
-    return function(cb) {
-      fs.stat(spec.dstFiles[0], function(err, data) {
-        if (err) {
-          cb(err);
-        } else {
-          cb(null, data.mtime);
-        }
-      });
-    };
+  } else if (isArray(spec.dstFiles) && spec.dstFiles.length > 0) {
+    return makeAgeGetterFromDstFiles(spec.dstFiles);
   }
   throw new Error('Unable to generate age-getter');
 }

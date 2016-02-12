@@ -1,6 +1,7 @@
 var assert = require('assert');
 var snytbagge = require('../snytbagge/index.js');
 var fs = require('fs');
+var path = require('path');
 // https://www.npmjs.com/package/object-hash
 
 function Env(name) {
@@ -127,16 +128,37 @@ Env.prototype.file = function(filename) { // Identity: The output is the input.
   });
 }
 
-function generateTransformedFilename(x) {
-  
+function getFirstDstFilename(x) {
+  assert(isTarget(x));
+  if (isArray(x.spec.dstFiles)) {
+    return x.spec.dstFiles[0];
+  }
+  return null;
 }
 
-Env.prototype.transformString = function(deps, transformer) {
+
+function extendFilename(f) {
+  var p = path.parse(f);
+  return path.join(p.dir, p.name + "_transformed" + p.ext);
+}
+
+// TODO: Generate it in the build directory instead of the source 
+// directory.
+function generateTransformedFilename(srcTarget) {
+  var f = getFirstDstFilename(srcTarget);
+  if (f) {
+    return extendFilename(f, "_transformed");
+  }
+  return null;
+}
+
+Env.prototype.transformFile = function(deps, transformer) {
   var x = getSingleElement(deps);
+  var dstFilename = generateTransformedFilename(x);
   return this.makeTarget([x], {
     name: "transform_" + x,
     srcFiles: [],
-    dstFiles: ['dummy']
+    dstFiles: [dstFilename]
   });
 }
 

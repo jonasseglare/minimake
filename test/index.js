@@ -10,7 +10,7 @@ describe('minimake', function() {
     var inFilename = '/tmp/file.txt';
     
     var inFile = env.file(inFilename);
-    var outFile = env.transformString(inFile, function(s) {
+    var outFile = env.transformFile(inFile, function(s) {
       return s.toUpperCase();
     });
     
@@ -22,6 +22,7 @@ describe('minimake', function() {
         assert(age);
         inFile.getAge(function(err, age2) {
           assert(age == age2);
+          assert(outFile.spec.dstFiles);
           done(err);
         });
       });

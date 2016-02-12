@@ -8,9 +8,12 @@ describe('minimake', function() {
     var env = new core.Env('test');
 
     var inFilename = '/tmp/file.txt';
-    var outFilename = '/tmp/file2.txt';
     
-    var inFile = env.makeFileTarget(inFilename);
+    var inFile = env.file(inFilename);
+    var outFile = env.transformString(inFile, function(s) {
+      return s.toUpperCase();
+    });
+    
     fs.writeFile(inFilename, 'mjao', function(err) {
       assert(!err);
       inFile.getAge(function(err, age) {

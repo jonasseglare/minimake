@@ -1,24 +1,49 @@
+var assert = require('assert');
 var fs = require('fs');
 // https://www.npmjs.com/package/object-hash
 
 function Env(name) {
   this.buildDirectory = process.cwd();
   this.name = name;
-  this.targetDatabase = {};
+
+  // Used to keep track of target ages across different builds.
+  // Not needed, because the age should be deducible from the files involved.
+  // this.targetDatabase = {};
+}
+
+function isTarget(x) {
+  return x instanceof Target;
 }
 
 function isString(x) {
   return typeof x == 'string';
 }
 
+function isArray(x) {
+  return x instanceof Array;
+}
+
 function isFunction(x) {
   return typeof x == 'function';
 }
 
-function makeGetAge(spec) {
-  if (isString(spec.sourceFile)) {
+function getSingleElement(x) {
+  if (x instanceof Array) {
+    assert(x.length == 1);
+    return x[0];
+  }
+  return x;
+}
+
+function makeAgeGetter(spec) {
+  if (isFunction(spec.getAge)) {
+    return spec.getAge;
+  } else if (isArray(spec.dstFiles)) {
+
+    assert(spec.dstFiles.length > 0); // TODO: Take the age of oldest file
+
     return function(cb) {
-      fs.stat(spec.sourceFile, function(err, data) {
+      fs.stat(spec.dstFiles[0], function(err, data) {
         if (err) {
           cb(err);
         } else {
@@ -29,6 +54,7 @@ function makeGetAge(spec) {
   }
   throw new Error('Unable to generate age-getter');
 }
+
 
 function getName(spec) {
   if (isString(spec.name)) {
@@ -41,7 +67,13 @@ function Target(env, deps, spec) {
   this.deps = deps;
   this.spec = spec;
   this.name = getName(spec);
-  this.ageGetter = makeGetAge(spec);
+  this.ageGetter = makeAgeGetter(spec);
+
+  this.buildState = 0; // 0: Not built, 1: In progress: 2: Completed
+
+  // Once buildState = 2, these two may be defined.
+  this.buildError = null; 
+  this.buildOutput = null;
 }
 
 Target.prototype.getAge = function(cb) {
@@ -64,10 +96,24 @@ Env.prototype.makeTarget = function(dependencies, spec) {
   return new Target(this, dependencies, spec);
 };
 
-Env.prototype.makeFileTarget = function(filename) {
+Env.prototype.file = function(filename) { // Identity: The output is the input.
   return this.makeTarget([], {
     name: 'FileTarget_' + filename,
-    sourceFile: filename
+    srcFiles: [filename],
+    dstFiles: [filename]
+  });
+}
+
+function generateTransformedFilename(x) {
+  
+}
+
+Env.prototype.transformString = function(deps, transformer) {
+  var x = getSingleElement(deps);
+  return this.makeTarget([x], {
+    name: "transform_" + x,
+    srcFiles: [],
+    dstFiles: ['dummy']
   });
 }
 

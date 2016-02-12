@@ -11,6 +11,10 @@ function isString(x) {
   return typeof x == 'string';
 }
 
+function isFunction(x) {
+  return typeof x == 'function';
+}
+
 function makeGetAge(spec) {
   if (isString(spec.sourceFile)) {
     return function(cb) {
@@ -27,7 +31,6 @@ function makeGetAge(spec) {
 }
 
 function getName(spec) {
-  console.log('Spec: %j', spec);
   if (isString(spec.name)) {
     return spec.name;
   }
@@ -43,7 +46,7 @@ function Target(env, deps, spec) {
 
 Target.prototype.getAge = function(cb) {
   if (this.age) {
-    cb(null, age);
+    cb(null, this.age);
   } else {
     var self = this;
     this.ageGetter(function(err, age) {

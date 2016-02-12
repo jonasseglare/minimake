@@ -1,0 +1,31 @@
+{
+  "name": "minimake",
+  "version": "1.0.0",
+  "description": "A modern alternative to Make",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jonasseglare/minimake.git"
+  },
+  "keywords": [
+    "build",
+    "system",
+    "Make",
+    "C++",
+    "utility",
+    "code",
+    "generation",
+    "build",
+    "make",
+    "develop"
+  ],
+  "author": "Jonas Östlund <uppfinnarjonas@gmail.com>",
+  "license": "EPL",
+  "bugs": {
+    "url": "https://github.com/jonasseglare/minimake/issues"
+  },
+  "homepage": "https://github.com/jonasseglare/minimake"
+}
